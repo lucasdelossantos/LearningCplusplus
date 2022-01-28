@@ -1,4 +1,4 @@
-/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/ninja -G Ninja /Users/ldelossa/C++/LinkedList
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/ninja -G Ninja /Users/ldelossa/LearningCplusplus/LinkedList
 -- The C compiler identification is AppleClang 13.0.0.13000029
 -- The CXX compiler identification is AppleClang 13.0.0.13000029
 -- Detecting C compiler ABI info
@@ -13,4 +13,4 @@
 -- Detecting CXX compile features - done
 -- Configuring done
 -- Generating done
--- Build files have been written to: /Users/ldelossa/C++/LinkedList/cmake-build-debug
+-- Build files have been written to: /Users/ldelossa/LearningCplusplus/LinkedList/cmake-build-debug

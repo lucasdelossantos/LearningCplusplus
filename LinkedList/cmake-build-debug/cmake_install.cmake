@@ -1,4 +1,4 @@
-# Install script for directory: /Users/ldelossa/C++/LinkedList
+# Install script for directory: /Users/ldelossa/LearningCplusplus/LinkedList
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/ldelossa/C++/LinkedList/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/ldelossa/LearningCplusplus/LinkedList/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
