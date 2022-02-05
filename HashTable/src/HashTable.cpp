@@ -11,7 +11,7 @@
 #include <climits>
 #include <iostream>
 #include <string> // atoi
-#include <time.h>
+#include <ctime>
 
 #include "CSVparser.hpp"
 
@@ -37,9 +37,12 @@ struct Bid {
     }
 };
 
+void displayBid(Bid bid);
 //============================================================================
 // Hash Table class definition
 //============================================================================
+
+double strtod(const char *string);
 
 /**
  * Define a class containing data members and methods to
@@ -49,11 +52,36 @@ class HashTable {
 
 private:
     // FIXME (1): Define structures to hold bids
+    struct Node {
+        Bid bid;
+        unsigned key;
+        Node* nextNodePtr;
 
-    unsigned int hash(int key);
+        // constructor
+        Node() {
+            key = UINT_MAX;
+            nextNodePtr = nullptr;
+        }
+
+        // Node initialized with a bid
+        Node(Bid myBid) : Node() {
+            bid = myBid;
+        }
+
+        Node(Bid myBid, unsigned newKey) : Node(myBid) {
+            key = newKey;
+        }
+    };
+
+    vector<Node> HashNode;
+
+    unsigned setSize = DEFAULT_SIZE;
+
+    unsigned int hash(int key) const;
 
 public:
     HashTable();
+    explicit HashTable(unsigned size);
     virtual ~HashTable();
     void Insert(Bid bid);
     void PrintAll();
@@ -66,13 +94,21 @@ public:
  */
 HashTable::HashTable() {
     // FIXME (2): Initialize the structures used to hold bids
+    HashNode.resize(setSize);
 }
+
+HashTable::HashTable(unsigned size) {
+    this->setSize = size;
+    HashNode.resize(setSize);
+}
+
 
 /**
  * Destructor
  */
 HashTable::~HashTable() {
     // FIXME (3): Implement logic to free storage when class is destroyed
+    HashNode.erase(HashNode.begin());
 }
 
 /**
@@ -84,8 +120,9 @@ HashTable::~HashTable() {
  * @param key The key to hash
  * @return The calculated hash
  */
-unsigned int HashTable::hash(int key) {
+unsigned int HashTable::hash(int key) const {
     // FIXME (4): Implement logic to calculate a hash value
+    return key % setSize;
 }
 
 /**
@@ -95,6 +132,29 @@ unsigned int HashTable::hash(int key) {
  */
 void HashTable::Insert(Bid bid) {
     // FIXME (5): Implement logic to insert a bid
+
+    unsigned key = hash(atoi(bid.bidId.c_str()));
+
+    // search for node with the key value
+
+    Node* prevNode = &(HashNode.at(key));
+
+    if (prevNode == nullptr) {
+        Node* nextNode = new Node(bid, key);
+        HashNode.insert(HashNode.begin() + key, (*nextNode));
+    } else {
+        // if node is found
+        if (prevNode->key == UINT_MAX) {
+            prevNode->key = key;
+            prevNode->bid = bid;
+            prevNode->nextNodePtr = nullptr;
+        } else {
+            // if not found, find the next node available
+            while (prevNode->nextNodePtr != nullptr) {
+                prevNode = prevNode->nextNodePtr;
+            }
+        }
+    }
 }
 
 /**
@@ -102,6 +162,9 @@ void HashTable::Insert(Bid bid) {
  */
 void HashTable::PrintAll() {
     // FIXME (6): Implement logic to print all bids
+    for (auto & myNode : HashNode) {
+        displayBid(myNode.bid);
+    }
 }
 
 /**
@@ -111,6 +174,8 @@ void HashTable::PrintAll() {
  */
 void HashTable::Remove(string bidId) {
     // FIXME (7): Implement logic to remove a bid
+    unsigned key = hash(atoi(bidId.c_str()));
+    HashNode.erase(HashNode.begin() + key);
 }
 
 /**
@@ -122,7 +187,32 @@ Bid HashTable::Search(string bidId) {
     Bid bid;
 
     // FIXME (8): Implement logic to search for and return a bid
+    unsigned key = hash(atoi(bidId.c_str()));
 
+    // search for node with the key value
+
+    Node* node = &(HashNode.at(key));
+
+    // search for node using key
+
+    // if node is found by given key
+    if (node != nullptr && node->key != UINT_MAX
+        && node->bid.bidId.compare(bidId) == 0) {
+        return node->bid;
+    }
+
+    // if there is no node with the key value
+    if (node == nullptr || node->key == UINT_MAX) {
+        return bid;
+    }
+
+    // traverse list to look for a match
+    while (node != nullptr) {
+        if (node->key != UINT_MAX && node->bid.bidId.compare(bidId) == 0) {
+            return node->bid;
+        }
+        node = node->nextNodePtr;
+    }
     return bid;
 }
 
@@ -191,7 +281,11 @@ void loadBids(string csvPath, HashTable* hashTable) {
  */
 double strToDouble(string str, char ch) {
     str.erase(remove(str.begin(), str.end(), ch), str.end());
-    return atof(str.c_str());
+    return strtod(str.c_str());
+}
+
+double strtod(const char *string) {
+    return 0;
 }
 
 /**
@@ -211,7 +305,7 @@ int main(int argc, char* argv[]) {
         bidKey = argv[2];
         break;
     default:
-        csvPath = "eBid_Monthly_Sales_Dec_2016.csv";
+        csvPath = "../eBid_Monthly_Sales_Dec_2016.csv";
         bidKey = "98109";
     }
 
