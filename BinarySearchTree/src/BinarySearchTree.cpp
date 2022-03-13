@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : HashTable.cpp
+// Name        : BinarySearchTree.cpp
 // Author      : Lucas de los Santos
 // Author      : Amanda de los Santos
 // Version     : 1.0
@@ -7,10 +7,7 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include <algorithm>
-#include <climits>
 #include <iostream>
-#include <string> // atoi
 #include <ctime>
 
 #include "CSVparser.hpp"
@@ -20,8 +17,6 @@ using namespace std;
 //============================================================================
 // Global definitions visible to all methods and classes
 //============================================================================
-
-const unsigned int DEFAULT_SIZE = 179;
 
 // forward declarations
 double strToDouble(string str, char ch);
@@ -37,59 +32,41 @@ struct Bid {
     }
 };
 
-void displayBid(Bid bid);
-//============================================================================
-// Hash Table class definition
-//============================================================================
+// FIXME (1): Internal structure for tree node
+struct Node {
+    Bid bid;
+    Node* right;
+    Node* left;
+    Node() {
+        right = left = nullptr;
+    }
+    Node(Bid bid) : Node() {
+        this->bid = bid;
+    }
+};
 
-double strtod(const char *string);
+//============================================================================
+// Binary Search Tree class definition
+//============================================================================
 
 /**
  * Define a class containing data members and methods to
- * implement a hash table with chaining.
+ * implement a binary search tree
  */
-class HashTable {
+class BinarySearchTree {
 
 private:
-    // FIXME (1): Define structures to hold bids
-    struct Node {
-        Bid bid;
-        unsigned key;
-        Node* nextNodePtr;
+    Node* root;
 
-        // constructor
-        Node() {
-            /**
-             * Climit macro constant to get minimum value of and unsigned int object. The minimum is 4294967295 (on 32 bits compiler)
-             * Source: https://www.includehelp.com/cpp-tutorial/UINT_MAX-constant-with-example.aspx
-             */
-            key = UINT_MAX;
-            nextNodePtr = nullptr;
-        }
-
-        // Node initialized with a bid
-        Node(Bid myBid) : Node() {
-            bid = myBid;
-        }
-        // Initialize with myBid and a key
-        Node(Bid myBid, unsigned newKey) : Node(myBid) {
-            key = newKey;
-        }
-    };
-/**
- * Instating vector to control sizing, deletion, insertion of data
- */
-    vector<Node> HashNode;
-
-    unsigned tableSize = DEFAULT_SIZE;
-
-    unsigned int hash(int key) const;
+    void addNode(Node* node, Bid bid);
+    void inOrder(Node* node);
+    Node* removeNode(Node* node, string bidId);
 
 public:
-    HashTable();
-    virtual ~HashTable();
+    BinarySearchTree();
+    virtual ~BinarySearchTree();
+    void InOrder();
     void Insert(Bid bid);
-    void PrintAll();
     void Remove(string bidId);
     Bid Search(string bidId);
 };
@@ -97,127 +74,145 @@ public:
 /**
  * Default constructor
  */
-HashTable::HashTable() {
-    // FIXME (2): Initialize the structures used to hold bids
-    HashNode.resize(tableSize);
+BinarySearchTree::BinarySearchTree() {
+    // initialize housekeeping variables
+    root = nullptr;
 }
-
 
 /**
  * Destructor
  */
-HashTable::~HashTable() {
-    // FIXME (3): Implement logic to free storage when class is destroyed
-    HashNode.erase(HashNode.begin());
+BinarySearchTree::~BinarySearchTree() {
+    // recurse from root deleting every node
 }
 
 /**
- * Calculate the hash value of a given key.
- * Note that key is specifically defined as
- * unsigned int to prevent undefined results
- * of a negative list index.
- *
- * @param key The key to hash
- * @return The calculated hash
+ * Traverse the tree in order
  */
-unsigned int HashTable::hash(int key) const {
-    // FIXME (4): Implement logic to calculate a hash value
-    return key % tableSize;
+void BinarySearchTree::InOrder() {
+    this->inOrder(root);
+}
+
+/**
+ * Remove node private method
+ * @param node Current node in tree
+ * @param bid Bid to be removed
+ * @return
+ */
+
+Node* BinarySearchTree::removeNode(Node *node, string bidId) {
+    if (node == nullptr) {
+        return node;
+    }
+    if(bidId.compare(node->bid.bidId) < 0) {
+        node->left = removeNode(node->left, bidId);
+    } else if (bidId.compare(node->bid.bidId) > 0) {
+        node->right = removeNode(node->right, bidId);
+    } else {
+// if there is no children simply delete the node
+        if (node->left == nullptr && node->right == nullptr) {
+            delete node;
+            node = nullptr;
+        }
+// If there is a left children
+        else if (node->left != nullptr && node->right == nullptr) {
+            Node* tempNode = node;
+            node = node->left;
+            delete tempNode;
+// If there is a right children
+        } else if (node->left == nullptr && node->right != nullptr) {
+            Node* tempNode = node;
+            node = node->right;
+            delete tempNode;
+        } else {
+            Node* temp = node->right;
+            while(temp->left == nullptr) {
+                temp = temp->left;
+            }
+            node->bid = temp->bid;
+            node->right = removeNode(node->right, temp->bid.bidId);
+        }
+    }
+    return node;
 }
 
 /**
  * Insert a bid
- *
- * @param bid The bid to insert
  */
-void HashTable::Insert(Bid bid) {
-    // FIXME (5): Implement logic to insert a bid
-
-    unsigned key = hash(atoi(bid.bidId.c_str()));
-    // cout << key << endl;
-
-    // search for node with the key value
-
-    Node* prevNode = &(HashNode.at(key));
-
-    // if the entry is not found for the key
-    if (prevNode == nullptr) {
-        Node* nextNode = new Node(bid, key);
-        HashNode.insert(HashNode.begin() + key, (*nextNode));
+void BinarySearchTree::Insert(Bid bid) {
+    // FIXME (2a) Implement inserting a bid into the tree
+// If there is no existing node in the tree
+    if(root == nullptr) {
+        root = new Node(bid);
     } else {
-        // if node is found
-        if (prevNode->key == UINT_MAX) {
-            prevNode->key = key;
-            prevNode->bid = bid;
-            prevNode->nextNodePtr = nullptr;
-        } else {
-            // if not found, find the next node available
-            while (prevNode->nextNodePtr != nullptr) {
-                prevNode = prevNode->nextNodePtr;
-            }
-        }
-    }
-}
-
-/**
- * Print all bids
- */
-void HashTable::PrintAll() {
-    // FIXME (6): Implement logic to print all bids
-    for (auto & myNode : HashNode) {
-        displayBid(myNode.bid);
+// otherwise add it to the root
+        this->addNode(root, bid);
     }
 }
 
 /**
  * Remove a bid
- *
- * @param bidId The bid id to search for
  */
-void HashTable::Remove(string bidId) {
-    // FIXME (7): Implement logic to remove a bid
-    unsigned key = hash(atoi(bidId.c_str()));
-    HashNode.erase(HashNode.begin() + key);
+void BinarySearchTree::Remove(string bidId) {
+    // FIXME (4a) Implement removing a bid from the tree
+    this->removeNode(root, bidId);
 }
 
 /**
- * Search for the specified bidId
- *
- * @param bidId The bid id to search for
+ * Search for a bid
  */
-Bid HashTable::Search(string bidId) {
-    Bid bid;
-
-    // FIXME (8): Implement logic to search for and return a bid
-    unsigned key = hash(atoi(bidId.c_str()));
-
-    // search for node with the key value
-
-    Node* node = &(HashNode.at(key));
-
-    // search for node using key
-
-    // if node is found by given key
-    if (node != nullptr && node->key != UINT_MAX
-        && node->bid.bidId.compare(bidId) == 0) {
-        return node->bid;
-    }
-
-    // if there is no node with the key value
-    if (node == nullptr || node->key == UINT_MAX) {
-        return bid;
-    }
-
-    // traverse list to look for a match
-    while (node != nullptr) {
-        if (node->key != UINT_MAX && node->bid.bidId.compare(bidId) == 0) {
-            return node->bid;
+Bid BinarySearchTree::Search(string bidId) {
+    // FIXME (3) Implement searching the tree for a bid
+// start from the root
+    Node* current = root;
+    while(current != nullptr) {
+        if(current->bid.bidId.compare(bidId) == 0) {
+            return current->bid;
         }
-        node = node->nextNodePtr;
+// traverse left if bid is smaller than current
+        if(bidId.compare(current->bid.bidId) < 0) {
+            current = current->left;
+        } else {
+            current = current->right;
+        }
     }
+    Bid bid;
     return bid;
 }
 
+/**
+ * Add a bid to some node (recursive)
+ *
+ * @param node Current node in tree
+ * @param bid Bid to be added
+ */
+void BinarySearchTree::addNode(Node* node, Bid bid) {
+    // FIXME (2b) Implement inserting a bid into the tree
+    // add to the right if the bid is smaller than the node
+    if (node->bid.bidId.compare(bid.bidId) > 0) {
+        if(node->left == nullptr) {
+            node->left = new Node(bid);
+        } else {
+            this->addNode(node->left, bid);
+        }
+    } else {
+    // add to left if the bid is bigger than the node
+        if(node->right == nullptr) {
+            node->right = new Node(bid);
+        } else {
+            this->addNode(node->right, bid);
+        }
+    }
+}
+void BinarySearchTree::inOrder(Node* node) {
+    // Recursively traverse the tree to the right and left and print it
+    if(node != nullptr) {
+        inOrder(node->left);
+        cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | " << node->bid.fund << endl;
+        inOrder(node->right);
+        // cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | " << node->bid.fund << endl;
+    }
+}
 //============================================================================
 // Static methods used for testing
 //============================================================================
@@ -239,7 +234,7 @@ void displayBid(Bid bid) {
  * @param csvPath the path to the CSV file to load
  * @return a container holding all the bids read
  */
-void loadBids(string csvPath, HashTable* hashTable) {
+void loadBids(string csvPath, BinarySearchTree* bst) {
     cout << "Loading CSV file " << csvPath << endl;
 
     // initialize the CSV Parser using the given path
@@ -266,7 +261,7 @@ void loadBids(string csvPath, HashTable* hashTable) {
             //cout << "Item: " << bid.title << ", Fund: " << bid.fund << ", Amount: " << bid.amount << endl;
 
             // push this bid to the end
-            hashTable->Insert(bid);
+            bst->Insert(bid);
         }
     } catch (csv::Error &e) {
         std::cerr << e.what() << std::endl;
@@ -283,11 +278,7 @@ void loadBids(string csvPath, HashTable* hashTable) {
  */
 double strToDouble(string str, char ch) {
     str.erase(remove(str.begin(), str.end(), ch), str.end());
-    return strtod(str.c_str());
-}
-
-double strtod(const char *string) {
-    return 0;
+    return atof(str.c_str());
 }
 
 /**
@@ -314,8 +305,8 @@ int main(int argc, char* argv[]) {
     // Define a timer variable
     clock_t ticks;
 
-    // Define a hash table to hold all the bids
-    HashTable* bidTable;
+    // Define a binary search tree to hold all bids
+    BinarySearchTree* bst;
 
     Bid bid;
 
@@ -326,6 +317,7 @@ int main(int argc, char* argv[]) {
         cout << "  2. Display All Bids" << endl;
         cout << "  3. Find Bid" << endl;
         cout << "  4. Remove Bid" << endl;
+        cout << "  5. Add Bid" << endl;
         cout << "  9. Exit" << endl;
         cout << "Enter choice: ";
         cin >> choice;
@@ -333,14 +325,16 @@ int main(int argc, char* argv[]) {
         switch (choice) {
 
         case 1:
-            bidTable = new HashTable();
+            bst = new BinarySearchTree();
 
             // Initialize a timer variable before loading bids
             ticks = clock();
 
             // Complete the method call to load the bids
-            loadBids(csvPath, bidTable);
-            // cout << bidTable << " bids read" << endl;
+            loadBids(csvPath, bst);
+
+            //cout << bst->Size() << " bids read" << endl;
+
             // Calculate elapsed time and display result
             ticks = clock() - ticks; // current clock ticks minus starting clock ticks
             cout << "time: " << ticks << " clock ticks" << endl;
@@ -348,33 +342,38 @@ int main(int argc, char* argv[]) {
             break;
 
         case 2:
-            bidTable->PrintAll();
+            bst->InOrder();
             break;
 
         case 3:
             ticks = clock();
 
-            bid = bidTable->Search(bidKey);
+            bid = bst->Search(bidKey);
 
             ticks = clock() - ticks; // current clock ticks minus starting clock ticks
 
             if (!bid.bidId.empty()) {
                 displayBid(bid);
             } else {
-                cout << "Bid Id " << bidKey << " not found." << endl;
+            	cout << "Bid Id " << bidKey << " not found." << endl;
             }
 
             cout << "time: " << ticks << " clock ticks" << endl;
             cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+
             break;
 
         case 4:
-            bidTable->Remove(bidKey);
+            bst->Remove(bidKey);
             break;
+
+        case 5:
+
         }
+
     }
 
     cout << "Good bye." << endl;
 
-    return 0;
+	return 0;
 }
