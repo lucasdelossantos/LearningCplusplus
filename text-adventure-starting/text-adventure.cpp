@@ -5,7 +5,29 @@
 
 using namespace std;
 
+struct Page {
+    string text;
+    int options;
+    int nextpage[10];
+};
 
+const Page gamePages[] = {
+{
+       "Test. Choose 1 or 2: ",
+       2,
+       {1,2}
+    },
+{
+        "You've reached choice 1",
+        0,
+        {}
+    },
+{
+        "You've reached choice 2",
+        0,
+        {}
+    }
+};
 void storyBegins() {
     cout << "Welcome brave soul to a challenge worthy of the heroes of fables." << endl;
     cout << "On this journey your choice will spell your victory or your doom" << endl;
@@ -37,7 +59,29 @@ void characterCreation() {
     }
 }
 
+int doPage(int page){
+    cout << gamePages[page].text;
+    if(gamePages[page].options <= 0)
+        return -1;
+    int selection;
+    cin >> selection;
+    while(selection < 1 || selection > gamePages[page].options){
+        cout << "That is an invalid selection. Please try again" << endl;
+        cin >> selection;
+    }
+    return gamePages[page].nextpage[selection-1];
+}
+
+int storyTest(){
+    int currentPage = 0;
+    while(currentPage >= 0) {
+        currentPage = doPage(currentPage);
+    }
+    return 0;
+}
+
 int main(){
     storyBegins();
     characterCreation();
+    storyTest();
 }
